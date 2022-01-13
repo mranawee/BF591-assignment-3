@@ -1,0 +1,127 @@
+---
+title: "Assignment 3"
+---
+
+
+# BF591 - R for Biological Sciences (Assignment 3) {-}
+
+Here we load required libraries for what we'll need to do. It's good practice to try to do this first and to keep all required libraries/package calls in the same place. This is important for reproducibility and for your reference.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('cluster')
+library('tidymodels')
+```
+
+
+
+``` {r functions}
+read_expr_table <- function(filename, delim) {
+  expr_mat <- read.csv(filename, row.names=NULL, sep=delim) %>%
+    as_tibble() %>%
+    rename(probeids=row.names)
+    return(expr_mat)
+}
+
+tidy_t <- function(.data, melt_col, col_names) {
+  t <- .data %>%
+   pivot_longer(-melt_col, names_to=col_names) %>%
+   pivot_wider(names_from=melt_col, values_from=value)
+  return(t)
+}
+
+tidy_pca <- function(expr_mat) {
+pca_mat <- expr_mat %>% tidy_t('probeids', 'samples') %>%
+  column_to_rownames(var='samples') %>%
+  as.matrix() %>%
+  scale() %>%
+  as_tibble(rownames='samples') %>%
+  tidy_t('samples', 'probeids') %>%
+  column_to_rownames(var='probeids')
+  return(pca_mat)
+}
+
+prop_ve <- function(pca_results) {
+  ve <- pca_results$sdev^2
+  pve <- ve / sum(ve)
+  return(pve)
+
+}
+
+
+```
+
+```{r tidyverse, read, transpose and scale}
+
+expr_mat <- read_expr_table('example_intensity_data.csv', ' ')
+pca_mat <- tidy_pca(expr_mat)
+pca_results <- prcomp(pca_mat, scale=FALSE, center=FALSE)
+
+
+```
+
+```{r base R method of reading, scaling and transposing}
+
+data <- as.data.frame(read.csv('example_intensity_data.csv', sep= ' '))
+r_pca_results <- prcomp(t(scale(t(data))), scale=FALSE, center=FALSE)
+
+
+```
+
+
+
+```{r proportion of variance explained}
+pve <- prop_ve(pca_results)
+pve %>% as_tibble() %>% mutate(pc=1:35) %>% ggplot(mapping=aes(x=pc, y=value)) + geom_bar(stat='identity') + xlab('PC') + ylab('Proportion of variance') + theme_linedraw() + ggtitle('Proportion of variance explained by principal components')
+
+
+```
+
+
+```{r read in metadata and apply classification label to PCA}
+meta <- readr::read_csv('sample_metadata.csv')
+class <- meta %>% select(geo_accession, SixSubtypesClassification)
+rot <- pca_results$rotation %>% as_tibble(rownames='geo_accession')
+rot %>% left_join(class, by='geo_accession') %>% ggplot() + geom_point(mapping=aes(x=PC1, y=PC2, color=SixSubtypesClassification))
+
+```
+
+```{r kmeans on pca}
+
+pc1_2 <- rot %>% select(PC1, PC2)
+pc1_2 <- pc1_2 %>% kmeans(centers=3) %>% augment(kclust, data=pc1_2)
+ggplot(data=pc1_2) + geom_point(mapping=aes(x=PC1, y=PC2, color=.cluster))
+
+
+```
+
+
+
+
+```{r multiple k means}
+clusts <- tibble(k=2:7) %>%
+  mutate(
+    kclusts = map(k, ~kmeans(pc1_2, .x)),
+    summary_stats = map(kclusts, glance),
+    cluster_labels = map(kclusts, augment, pc1_2),
+
+
+  )
+
+```
+
+
+```{r facetwrap of kmeans plot for different choices of k}
+
+clusts %>% group_by(k) %>% unnest(cluster_labels) %>%
+  ggplot + geom_point(mapping = aes(x=PC1, y= PC2, color= .cluster)) + facet_wrap(~k)
+
+
+```
+```{r elbow plot}
+
+clusts %>% group_by(k) %>% unnest(summary_stats) %>% ggplot + geom_line(mapping=aes(x = k, y = tot.withinss))
+
+
+
+```
