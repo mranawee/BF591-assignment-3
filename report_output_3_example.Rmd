@@ -1,0 +1,61 @@
+---
+output: html_document
+---
+
+# Source your function script and load necessary libraries
+```{r code block to source functions and load libraries, message=FALSE}
+source('main.R')
+library('tidyverse')
+library('RColorBrewer')
+```
+
+
+# Read in the example_intensity_data
+```{r code block to read data}
+intensity <- read_data('example_intensity_data.csv', ' ')
+```
+
+# Transpose, scale the matrix before performing PCA
+```{r code block to transpose, scale data and perform PCA}
+pca_res <- prcomp(scale(t(intensity)), center=FALSE, scale=FALSE)
+```
+
+# Function to calculate the variance explained by each principal component
+```{r code block to calculate variance}
+var_pca <- pca_var(pca_res)
+var_tib <- make_var_tib(var_pca, pca_res)
+
+```
+
+# Create descriptive captions for plots here
+```{r code block to create descriptive captions}
+caption1 <- 'Descriptive Caption for figure 1 here'
+caption2 <- 'Descriptive Caption for figure 2 here'
+caption3 <- 'Descriptive Caption for figure 3 here'
+
+```
+
+# Barplot of individual variance explained by PC overlayed with scatter/line plot of cumulative variance explained by successive PCs
+```{r code block to plot variance and cumulative variance explained, fig.cap = caption1}
+ve_plot <- plot_pca_ve(var_tib)
+ve_plot
+```
+
+# Plot of PC1 vs. PC2
+```{r code block to plot PCA$x for PC1 and PC2, message=FALSE, fig.cap = caption2}
+pca_label <- add_pca_labels('proj_metadata.csv', pca_res)
+biplot <- plot_pca(pca_label)
+biplot
+```
+
+# Filter differential_expression_results.csv by adjusted p-value and return normalized intensity values
+```{r code block to filter DE probes, and return matrix of selected normalized intensity values}
+sig_ids <- list_sig_ids('differential_expression_results.csv', .01)
+de_intensity <- return_de_intensity(intensity, sig_ids)
+```
+
+# Heatmap of normalized intensity values (color blind friendly)
+```{r code block to plot heatmap of normalized intensity values for DE probes, fig.cap = caption3}
+heatmap_plot <- plot_heatmap(de_intensity, 11, 'RdBu')
+```
+

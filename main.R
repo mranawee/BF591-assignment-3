@@ -10,9 +10,9 @@ pca_var <- function(pca_results) {
   return(pve)
 }
 
-make_var_tib <- function(pca_var) {
+make_var_tib <- function(pca_var, pca_results) {
   var_tib <- tibble(variance_explained = pca_var) %>% 
-  mutate(principal_components = factor(colnames(pca$x), levels=colnames(pca$x)), cumulative = cumsum(variance_explained))
+  mutate(principal_components = factor(colnames(pca_results$x), levels=colnames(pca_results$x)), cumulative = cumsum(variance_explained))
   return(var_tib)
 }
 
