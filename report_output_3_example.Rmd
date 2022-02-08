@@ -7,9 +7,26 @@ output: html_document
 source('main.R')
 ```
 
+## Setup
 Feel free to refer to the reference_report.html provided in the assignment repo.
 This will let you see a preview of the output the report is intended to
-generate.
+generate, and this will be especially helpful for the sections that create
+plots.
+This assignment will make use of the
+[RColorBrewer](https://www.r-graph-gallery.com/38-rcolorbrewers-palettes.html)
+package to choose an appropriate color palette for a heatmap in part 8. Please
+make sure to install this package before starting.
+
+We will be using three main datasets that are contained within the repo: 
+
+1. example_intensity_data.csv - a dataframe containing the normalized intensity
+values from a microarray experiment
+
+2. proj_metadata.csv - a dataframe containing the associated metadata for the
+samples of the experiment
+
+3. differential_expression_results.csv - a dataframe containing the results of a
+differential expression analysis on the probes from this experiment.
 
 ## 1. Read in the example_intensity_data
 To begin, we will read in the same data you have used in previous experiments

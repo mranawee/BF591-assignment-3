@@ -169,7 +169,16 @@ pre code {
 
 
 <pre class="r"><code>source(&#39;main.R&#39;)</code></pre>
-<p>Feel free to refer to the reference_report.html provided in the assignment repo. This will let you see a preview of the output the report is intended to generate.</p>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<p>Feel free to refer to the reference_report.html provided in the assignment repo. This will let you see a preview of the output the report is intended to generate, and this will be especially helpful for the sections that create plots. This assignment will make use of the <a href="https://www.r-graph-gallery.com/38-rcolorbrewers-palettes.html">RColorBrewer</a> package to choose an appropriate color palette for a heatmap in part 8. Please make sure to install this package before starting.</p>
+<p>We will be using three main datasets that are contained within the repo:</p>
+<ol style="list-style-type: decimal">
+<li><p>example_intensity_data.csv - a dataframe containing the normalized intensity values from a microarray experiment</p></li>
+<li><p>proj_metadata.csv - a dataframe containing the associated metadata for the samples of the experiment</p></li>
+<li><p>differential_expression_results.csv - a dataframe containing the results of a differential expression analysis on the probes from this experiment.</p></li>
+</ol>
+</div>
 <div id="read-in-the-example_intensity_data" class="section level2">
 <h2>1. Read in the example_intensity_data</h2>
 <p>To begin, we will read in the same data you have used in previous experiments (<code>example_intensity_data.csv</code>). This time, we do <strong>not</strong> want to read it in as a tibble as some of our downstream operations will not work correctly without additional steps. <strong>Write a function, <code>read_data</code>, that reads in the example intensity data.csv as a <em>dataframe</em>. Return the first row of the dataframe below</strong>:</p>
