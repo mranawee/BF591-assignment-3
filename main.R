@@ -117,7 +117,7 @@ make_biplot <- function(metadata, pca_results) {
 #'
 #' @examples
 list_significant_probes <- function(diff_exp_csv, fdr_threshold) {
-sig_ids <- read_data('differential_expression_results.csv', ',') %>% 
+sig_ids <- read_data(diff_exp_csv, ',') %>% 
   as_tibble(rownames='probeid') %>% 
   filter(padj < fdr_threshold) %>% 
   select(probeid) %>% 
