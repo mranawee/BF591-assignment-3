@@ -1,25 +1,72 @@
+library('tidyverse')
+library('RColorBrewer')
+
+#' Read the expression data "csv" file as a dataframe, not tibble
+#'
+#' @param filename (str): the file to read
+#' @param delimiter (str): generalize the function so it can read in data with
+#'   your choice of delimiter
+#'
+#' @return A dataframe containing the example intensity data with rows as probes
+#'   and columns as samples
+#' @export
+#'
+#' @examples intensity_data <- read_data('example_intensity_data.csv', ' ')
 read_data <- function(intensity_data, delimiter) {
-  data <- as.data.frame(read.csv(intensity_data, sep= delimiter))
+  data <- read.csv(intensity_data, sep = delimiter)
   return(data)
 }
 
-#Calculate PCA variance explained
-pca_var <- function(pca_results) {
+
+#' Define a function to calculate the proportion of variance explained by each PC
+#'
+#' @param pca_results (obj): the results returned by `prcomp()`
+#'
+#' @return A vector containing the values of the variance explained by each PC
+#' @export
+#'
+#' @examples variance_explained <- pca_var(pca_results)
+calculate_variance <- function(pca_results) {
   ve <- pca_results$sdev^2
   pve <- ve / sum(ve)
   return(pve)
 }
 
-make_var_tib <- function(pca_var, pca_results) {
+#' Define a function that takes in the variance values and the PCA results to
+#' make a tibble with PCA names, variance explained by each PC, and the
+#' cumulative sum of variance explained
+#' @param pca_var (vector): the vector generated in the previous function with variance
+#'   values
+#' @param pca_results (object): the results returned by `prcomp()`
+#'
+#' @return A tibble that contains the names of the PCs, the individual variance
+#'   explained and the cumulative variance explained
+#' @export
+#'
+#' @examples
+make_variance_tibble <- function(pca_var, pca_results) {
   var_tib <- tibble(variance_explained = pca_var) %>% 
   mutate(principal_components = factor(colnames(pca_results$x), levels=colnames(pca_results$x)), cumulative = cumsum(variance_explained))
   return(var_tib)
 }
 
-plot_pca_ve <- function(var_tib) {
-  ls_cols <- c('Variance Explained'='black')
-  bar_cols <-c('Cumulative'='light blue')
-  var_tib %>%
+#' Define a function that creates a bar plot of the variance explained by each
+#' PC along with a scatter plot showing the cumulative sum of variance explained
+#' using ggplot2
+#' @param variance_tibble (tibble): the tibble gnerated in the previous function
+#' that contains each PC label, the variance explained by each PC, and the 
+#' cumulative sum of variance explained
+#'
+#' @return A ggplot with a barchart representing individual variance
+#'   explained and a scatterplot (connected with a line) that represents the
+#'   cumulative sum of PCs
+#' @export
+#'
+#' @examples
+plot_pca_variance <- function(variance_tibble) {
+  ls_cols <- c('Cumulative'='black')
+  bar_cols <-c('Variance Explained'='light blue')
+  variance_tibble %>%
     ggplot() + 
     geom_bar(aes(x=principal_components, y=variance_explained, fill='Variance Explained'), stat='identity', color='black') + 
     geom_line(aes(x=principal_components, y=cumulative, group=1, color='Cumulative')) +
@@ -32,19 +79,44 @@ plot_pca_ve <- function(var_tib) {
   
 }
 
-add_pca_labels <- function(metadata, pca_results) {
-  meta <- readr::read_csv(metadata)
-  class <- meta %>% select(geo_accession, SixSubtypesClassification)
-  x <- pca_results$x %>% as_tibble(rownames='geo_accession') %>% left_join(class, by='geo_accession')
-  return(x)
-}
+#' Define a function to create a biplot of PC1 vs. PC2 labeled by
+#' SixSubTypesClassification
+#'
+#' @param metadata (str): The path to the proj_metadata.csv file
+#' @param pca_results (obj): The results returned by `prcomp()`
+#'
+#' @return A ggplot consisting of a  scatter plot of PC1 vs PC2 labeled by
+#'   SixSubTypesClassification
+#' @export
+#'
+#' @examples
+make_biplot <- function(metadata, pca_results) {
+  meta <- readr::read_csv(metadata) %>% 
+    select(geo_accession, SixSubtypesClassification)
 
-plot_pca <- function(labeled) {
-  biplot <- labeled %>% ggplot() + geom_point(aes(x=PC1, y=PC2, color=SixSubtypesClassification))
+  labeled <- pca_results$x %>% 
+    as_tibble(rownames='geo_accession') %>% 
+    left_join(meta, by='geo_accession')
+  
+  biplot <- labeled %>% 
+    ggplot() + 
+    geom_point(aes(x=PC1, y=PC2, color=SixSubtypesClassification))
   return(biplot)
 }
 
-list_sig_ids <- function(diff_exp_csv, fdr_threshold) {
+
+#' Define a function to return a list of probeids filtered by signifiance
+#'
+#' @param diff_exp_csv (tibble): The differential expression results we have
+#'   provided
+#' @param fdr_threshold (float): an appropriate FDR threshold, we will use a
+#'   value of .01
+#'
+#' @return A list with the names of the probeids passing the fdr_threshold
+#' @export
+#'
+#' @examples
+list_significant_probes <- function(diff_exp_csv, fdr_threshold) {
 sig_ids <- read_data('differential_expression_results.csv', ',') %>% 
   as_tibble(rownames='probeid') %>% 
   filter(padj < fdr_threshold) %>% 
@@ -53,6 +125,17 @@ sig_ids <- read_data('differential_expression_results.csv', ',') %>%
   return(sig_ids$probeid)
 }
 
+#' Define a function that uses the list of significant probeids to return a 
+#' matrix with the intensity values for only those probeids. 
+#' @param intensity 
+#' @param sig_ids_list 
+#'
+#' @return A `matrix()` of the probe intensities for probes in the list of 
+#' significant probes by FDR determined in the previous function.
+#' 
+#' @export
+#'
+#' @examples
 return_de_intensity <- function(intensity, sig_ids_list) {
   de_intensity <- intensity %>% 
     as_tibble(rownames='probeid') %>% 
@@ -62,7 +145,20 @@ return_de_intensity <- function(intensity, sig_ids_list) {
   return(de_intensity)
 }
 
-plot_heatmap <- function(scaled, num_cols, color_pal) {
-  col.pal <- RColorBrewer::brewer.pal(num_cols, color_pal)
+#' Define a function that takes the intensity values for significant probes and
+#' creates a color-blind friendly heatmap
+#'
+#' @param intensity_vals (matrix): a matrix of the intensity values for the
+#'   significant probes
+#' @param num_cols (int): The number of colors in the selected color palette
+#' @param color_pal (str): A color-blind friendly, RColorBrewer palette
+#'
+#' @return A plot consisting of a heatmap of the intensity values for the
+#'   significant probes
+#' @export
+#'
+#' @examples
+plot_heatmap <- function(scaled) {
+  col.pal <- RColorBrewer::brewer.pal(11, 'RdBu')
   return(heatmap(de_intensity, col=col.pal))
 }

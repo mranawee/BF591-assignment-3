@@ -1,0 +1,46 @@
+---
+title: backup functions
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r kmeans on pca}
+
+pc1_2 <- rot %>% select(PC1, PC2)
+pc1_2 <- pc1_2 %>% kmeans(centers=3) %>% augment(kclust, data=pc1_2)
+ggplot(data=pc1_2) + geom_point(mapping=aes(x=PC1, y=PC2, color=.cluster))
+
+
+```
+
+
+
+```{r multiple k means}
+clusts <- tibble(k=2:7) %>%
+  mutate(
+    kclusts = map(k, ~kmeans(pc1_2, .x)),
+    summary_stats = map(kclusts, glance),
+    cluster_labels = map(kclusts, augment, pc1_2),
+
+
+  )
+
+```
+
+
+```{r facetwrap of kmeans plot for different choices of k}
+
+clusts %>% group_by(k) %>% unnest(cluster_labels) %>%
+  ggplot + geom_point(mapping = aes(x=PC1, y= PC2, color= .cluster)) + facet_wrap(~k)
+
+
+```
+```{r elbow plot}
+
+clusts %>% group_by(k) %>% unnest(summary_stats) %>% ggplot + geom_line(mapping=aes(x = k, y = tot.withinss))
+
+
+
+```
