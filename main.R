@@ -25,17 +25,17 @@ read_data <- function(intensity_data, delimiter) {
 #' @export
 #'
 #' @examples
-calculate_variance <- function(pca_results) {
-  ve <- pca_results$sdev^2
-  pve <- ve / sum(ve)
-  return(pve)
+calculate_variance_explained <- function(pca_results) {
+  v <- pca_results$sdev^2
+  ve <- v / sum(v)
+  return(ve)
 }
 
 #' Define a function that takes in the variance values and the PCA results to
 #' make a tibble with PCA names, variance explained by each PC, and the
 #' cumulative sum of variance explained
-#' @param pca_var (vector): the vector generated in the previous function with variance
-#'   values
+#' @param pca_ve (vector): the vector generated in the previous function with
+#'   the variance explained values
 #' @param pca_results (object): the results returned by `prcomp()`
 #'
 #' @return A tibble that contains the names of the PCs, the individual variance
@@ -43,8 +43,8 @@ calculate_variance <- function(pca_results) {
 #' @export
 #'
 #' @examples 
-make_variance_tibble <- function(pca_var, pca_results) {
-  var_tib <- tibble(variance_explained = pca_var) %>% 
+make_variance_tibble <- function(pca_ve, pca_results) {
+  var_tib <- tibble(variance_explained = pca_ve) %>% 
   mutate(principal_components = factor(colnames(pca_results$x), levels=colnames(pca_results$x)), cumulative = cumsum(variance_explained))
   return(var_tib)
 }
@@ -98,7 +98,8 @@ make_biplot <- function(metadata, pca_results) {
   
   biplot <- labeled %>% 
     ggplot() + 
-    geom_point(aes(x=PC1, y=PC2, color=SixSubtypesClassification))
+    geom_point(aes(x=PC1, y=PC2, color=SixSubtypesClassification)) +
+    theme_classic()
   return(biplot)
 }
 
@@ -150,13 +151,16 @@ return_de_intensity <- function(intensity, sig_ids_list) {
 #'
 #' @param de_intensity (matrix): The matrix of intensity values for significant
 #'   differentially expressed probes returned in part 7
+#' @param num_colors (int): The number of colors in a specificed RColorBrewer
+#'   palette
+#' @param palette (str): The name of the chosen RColorBrewer palette
 #'
 #' @return A heatmap displaying the intensity values for the differentially
 #'   expressed probes
 #' @export
 #'
 #' @examples
-plot_heatmap <- function(de_intensity) {
-  col.pal <- RColorBrewer::brewer.pal(11, 'RdBu')
+plot_heatmap <- function(de_intensity, num_colors, palette) {
+  col.pal <- RColorBrewer::brewer.pal(num_colors, palette)
   return(heatmap(de_intensity, col=col.pal))
 }

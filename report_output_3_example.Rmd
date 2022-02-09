@@ -11,7 +11,9 @@ source('main.R')
 Feel free to refer to the reference_report.html provided in the assignment repo.
 This will let you see a preview of the output the report is intended to
 generate, and this will be especially helpful for the sections that create
-plots.
+plots. The example report also displays the first few rows of all the data you
+will be generating in each section for your reference. 
+
 This assignment will make use of the
 [RColorBrewer](https://www.r-graph-gallery.com/38-rcolorbrewers-palettes.html)
 package to choose an appropriate color palette for a heatmap in part 8. Please
@@ -32,13 +34,14 @@ differential expression analysis on the probes from this experiment.
 To begin, we will read in the same data you have used in previous experiments
 (`example_intensity_data.csv`). This time, we do __not__ want to read it in as a
 tibble as some of our downstream operations will not work correctly without
-additional steps. __Write a function, `read_data`, that reads in the example
-intensity data.csv as a *dataframe*. Return the first row of the dataframe
-below__:
+additional steps. 
+
+__Write a function, `read_data`, that reads in the example_intensity_data.csv as
+a *dataframe*. Return the first two rows of the dataframe below__:
 
 ```{r code block to read data}
 intensity <- read_data('example_intensity_data.csv', ' ')
-head(intensity, 1)
+head(intensity, 2)
 ```
 ### Background on PCA 
 PCA is an exploratory data analysis technique commonly used to reduce the
@@ -69,35 +72,41 @@ above.__
 
 ```{r code block to transpose, scale data and perform PCA}
 pca_results <- prcomp(scale(t(intensity)), center=FALSE, scale=FALSE)
+head(pca_results)
 ```
 
 ## 2. Calculating the variance explained by Principal Components
-Now that we have performed PCA, we are interested in the amount of variance
-explained by each principal component. __Write a function, `calculate_variance`,
-that calculates the variance explained by each principal component from the
-`pca_results` object and return a *vector* of those values below.__
+Now that we have performed PCA, we are interested in the proportion of variance
+explained by each principal component. This can be determined by dividing the
+variance of each PC by the sum total of the variance of all PCs.
+
+__Write a function, `calculate_variance_explained`, that calculates the
+proportion of variance explained by each principal component from the
+`pca_results` object and returns a *vector* of those values below.__
 
 *Hint*: The standard deviation values of each PC may be accessed by
 pca_results$sdev. Remember the relationship between standard deviation and
 variance.
 
 ```{r code block to calculate variance}
-pc_variances <- calculate_variance(pca_results)
-pc_variances
+pc_variance_explained <- calculate_variance_explained(pca_results)
+pc_variance_explained
 ```
 
 ## 3. Make a tibble with variance explained and cumulative variance explained for the PCs
-__Using the vector of variances you just generated, write a function,
-`make_variance_tibble`, that uses this vector along with the
-`pca_results` object to construct a *tibble* with three columns containing the
-name of each PC, the variance explained by each PC, and the cumulative sum of
-variance explained. Return the first five rows below.__
+__Using the vector of variance explained values you just generated,
+`pc_variance_explained`, write a function, `make_variance_tibble`, that uses
+this vector along with the `pca_results` object to construct a *tibble* with
+three columns containing the name of each PC, the variance explained by each PC,
+and the cumulative sum of variance explained. Return the first five rows
+below.__
 
 ```{r code block to construct a tibble with PCs, variance explained, and cumulative variance explained}
-variance_tibble <- make_variance_tibble(pc_variances, pca_results)
+variance_tibble <- make_variance_tibble(pc_variance_explained, pca_results)
 head(variance_tibble, 5)
 ```
 
+### Create descriptive captions for plots here after you've finished
 For the next few sections, we will be generating plots. It is customary to
 provide descriptive captions for figures that succinctly state what's being
 displayed. Browse a few scientific papers of your choice to get a sense for how
@@ -109,7 +118,6 @@ which will use these variables to create captions underneath the respective
 figures. Until you've completed all the parts, you may safely leave these
 captions blank.
 
-# Create descriptive captions for plots here after you've finished
 ```{r code block to create descriptive captions}
 caption_4 <- 'Descriptive Caption for part 4 here'
 caption_5 <- 'Descriptive Caption for part 5 here'
@@ -120,14 +128,15 @@ caption_8 <- 'Descriptive Caption for part 8 here'
 __Write a function, `plot_pca_variance`, that uses the results generated in part
 3, `variance_tibble`, and returns a *plot* that contains both a barchart
 representing the variance explained by each individual PC along with a
-scatterplot (connected with a line) that displays the cumulative variance across
-all the PCs. Provide appropriate labels for each plot.__
+scatterplot (connected with a line) that displays the cumulative sum of the
+variance explained across all the PCs. Provide appropriate labels for each
+plot.__
 
 *Hint*: On your plot, you want the x-axis to represent each principal component
 in order of descending amounts of variance explained from left to right (i.e.
-PC1, PC2, PC3, etc.). You may run into the issue where your axis is
+PC1, PC2, PC3, etc.). You may run into an issue where your axis is
 automatically sorted differently. Please refer to discussions on lexicographical
-ordering vs numeric ordering.
+ordering vs. numeric ordering.
 
 ```{r, code block to plot variance explained and cumulative variance explained, fig.cap = caption_4}
 plot_pca_variance(variance_tibble)
@@ -139,9 +148,10 @@ As the first two PCs represent the first and second most amounts of variance, it
 is common to see scatter plots of the scores of the first two PCs for each
 sample. This biplot enables you to quickly see how your samples 'separate'
 across the PCs that represent (hopefully) the majority of variance in your data.
-__Write a function, `make_biplot` that generates a *plot* of the first two
-principal components labeled by their SixSubTypesClassification found in the
-`proj_metadata.csv`.__
+
+__Write a function, `make_biplot` that uses the `pca_results` generated in part
+1 and returns a *plot* of the first two principal components labeled by their
+SixSubTypesClassification found in the `proj_metadata.csv`.__
 
 *Hint*: You may access the values to plot by using `$x` (`pca_results$x`) and
 selecting the columns representing PC1 and PC2.
@@ -185,23 +195,25 @@ Now that we have a list of significant probes, we want to make a visualization,
 in the form of a heatmap, that will allow us to quickly determine if we see any
 patterns or clusters amongst these differentially expressed probes. To do this,
 we will extract out the intensity values from part 1 for these probes that are
-significantly differentially expressed and plot them in a heatmap. __Write a
-function, `return_de_intensity`, that uses the list of significant probes you
-generated in part 6 `sig_ids` and the example intensity data from part 1
-`intensity` to return a *matrix* of intensity values for just the significant
-probes.__
+significantly differentially expressed in part 6 and plot them in a heatmap.
+
+__Write a function, `return_de_intensity`, that uses the list of significant
+probes you generated in part 6 `sig_ids` and the example intensity data from
+part 1 `intensity` to return a *matrix* of intensity values for just the
+significant probes.__
 
 ```{r code block to return the intensity matrix for DE probes}
 de_intensity <- return_de_intensity(intensity, sig_ids)
+head(de_intensity, 2)
 ```
 
-## 8. Generate a heatmap of normalized intensity values (color blind friendly)
-__Write a function, `heatmap_plot`, that usesthe `de_intensity` results as and 
+## 8. Generate a heatmap of normalized intensity values (color-blind friendly)
+__Write a function, `heatmap_plot`, that uses the `de_intensity` results and 
 returns a heatmap *plot*.__
 
 *Hint*: Use the base R `heatmap()` function. For this example, we will only be
 passing two arguments: the `matrix` of normalized intensity values from part 7,
-and a color-blind friendly color-palette. Look at the RColorBrewer documentation
+and a color-blind friendly color palette. Look at the RColorBrewer documentation
 and choose a suitable palette. Your usage should look something like this:
 `heatmap(your_normalized_intensity_values, col = RColorBrewer_palette)`. The
 `heatmap()` function will automatically scale data as well as perform
@@ -210,6 +222,6 @@ in-depth into these topics, and you will run `heatmap()` with default options
 besides `col`.
 
 ```{r code block to plot heatmap of normalized intensity values for DE probes, fig.cap = caption_8}
-plot_heatmap(de_intensity)
+plot_heatmap(de_intensity, 11, 'RdBu')
 ```
 
