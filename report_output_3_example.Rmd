@@ -104,7 +104,7 @@ displayed. Browse a few scientific papers of your choice to get a sense for how
 figure captions are structured and written. For the sections numbered 4, 5, 8,
 please use the following code block to write descriptive captions for these
 figures. We have assigned these captions to variables, and if you look at the
-`{r code}` chunk for these parts (4, 5, 8), you will notice the fig.caption flag
+`{r code}` chunk for these parts (4, 5, 8), you will notice the `fig.cap` flag
 which will use these variables to create captions underneath the respective
 figures. Until you've completed all the parts, you may safely leave these
 captions blank.
@@ -123,6 +123,12 @@ representing the variance explained by each individual PC along with a
 scatterplot (connected with a line) that displays the cumulative variance across
 all the PCs. Provide appropriate labels for each plot.__
 
+*Hint*: On your plot, you want the x-axis to represent each principal component
+in order of descending amounts of variance explained from left to right (i.e.
+PC1, PC2, PC3, etc.). You may run into the issue where your axis is
+automatically sorted differently. Please refer to discussions on lexicographical
+ordering vs numeric ordering.
+
 ```{r, code block to plot variance explained and cumulative variance explained, fig.cap = caption_4}
 plot_pca_variance(variance_tibble)
 ```
@@ -133,15 +139,16 @@ As the first two PCs represent the first and second most amounts of variance, it
 is common to see scatter plots of the scores of the first two PCs for each
 sample. This biplot enables you to quickly see how your samples 'separate'
 across the PCs that represent (hopefully) the majority of variance in your data.
-__Write a function, `make_biplot` that generates a *plot* of the first two principal
-components labeled by their SixSubTypesClassification found in the
+__Write a function, `make_biplot` that generates a *plot* of the first two
+principal components labeled by their SixSubTypesClassification found in the
 `proj_metadata.csv`.__
 
 *Hint*: You may access the values to plot by using `$x` (`pca_results$x`) and
 selecting the columns representing PC1 and PC2.
 
 *Warning*: Since the first and second PCs likely represent different amounts of
-variance, the scale of the axes will not be the same.
+variance, visually interpreting these plots requires care as the scale of the
+'importance' of the axes differ. 
 
 ```{r code block to make a biplot of PC1 and PC2, message = FALSE, fig.cap = caption_5}
 make_biplot('proj_metadata.csv', pca_results)
