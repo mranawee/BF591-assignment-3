@@ -3,7 +3,7 @@ library('RColorBrewer')
 
 #' Read the expression data "csv" file as a dataframe, not tibble
 #'
-#' @param filename (str): the file to read
+#' @param filename (str): the path of the file to read
 #' @param delimiter (str): generalize the function so it can read in data with
 #'   your choice of delimiter
 #'
@@ -11,12 +11,11 @@ library('RColorBrewer')
 #'   and columns as samples
 #' @export
 #'
-#' @examples intensity_data <- read_data('example_intensity_data.csv', ' ')
+#' @examples
 read_data <- function(intensity_data, delimiter) {
   data <- read.csv(intensity_data, sep = delimiter)
   return(data)
 }
-
 
 #' Define a function to calculate the proportion of variance explained by each PC
 #'
@@ -25,7 +24,7 @@ read_data <- function(intensity_data, delimiter) {
 #' @return A vector containing the values of the variance explained by each PC
 #' @export
 #'
-#' @examples variance_explained <- pca_var(pca_results)
+#' @examples
 calculate_variance <- function(pca_results) {
   ve <- pca_results$sdev^2
   pve <- ve / sum(ve)
@@ -43,7 +42,7 @@ calculate_variance <- function(pca_results) {
 #'   explained and the cumulative variance explained
 #' @export
 #'
-#' @examples
+#' @examples 
 make_variance_tibble <- function(pca_var, pca_results) {
   var_tib <- tibble(variance_explained = pca_var) %>% 
   mutate(principal_components = factor(colnames(pca_results$x), levels=colnames(pca_results$x)), cumulative = cumsum(variance_explained))
@@ -76,7 +75,6 @@ plot_pca_variance <- function(variance_tibble) {
     labs(x='PC', y='% variance') +
     theme_classic(base_size=8) + 
     theme(axis.text.x=element_text(angle=90,hjust=1))
-  
 }
 
 #' Define a function to create a biplot of PC1 vs. PC2 labeled by
@@ -85,8 +83,8 @@ plot_pca_variance <- function(variance_tibble) {
 #' @param metadata (str): The path to the proj_metadata.csv file
 #' @param pca_results (obj): The results returned by `prcomp()`
 #'
-#' @return A ggplot consisting of a  scatter plot of PC1 vs PC2 labeled by
-#'   SixSubTypesClassification
+#' @return A ggplot consisting of a scatter plot of PC1 vs PC2 labeled by
+#'   SixSubTypesClassification found in the metadata
 #' @export
 #'
 #' @examples
@@ -107,8 +105,8 @@ make_biplot <- function(metadata, pca_results) {
 
 #' Define a function to return a list of probeids filtered by signifiance
 #'
-#' @param diff_exp_csv (tibble): The differential expression results we have
-#'   provided
+#' @param diff_exp_csv (str): The path to the differential expression results
+#'   file we have provided
 #' @param fdr_threshold (float): an appropriate FDR threshold, we will use a
 #'   value of .01
 #'
@@ -125,14 +123,16 @@ sig_ids <- read_data(diff_exp_csv, ',') %>%
   return(sig_ids$probeid)
 }
 
-#' Define a function that uses the list of significant probeids to return a 
-#' matrix with the intensity values for only those probeids. 
-#' @param intensity 
-#' @param sig_ids_list 
+#' Define a function that uses the list of significant probeids to return a
+#' matrix with the intensity values for only those probeids.
+#' @param intensity (dataframe): The dataframe of intensity data generated in
+#'   part 1
+#' @param sig_ids_list (list/vector): The list of differentially expressed
+#'   probes generated in part 6
 #'
-#' @return A `matrix()` of the probe intensities for probes in the list of 
-#' significant probes by FDR determined in the previous function.
-#' 
+#' @return A `matrix()` of the probe intensities for probes in the list of
+#'   significant probes by FDR determined in the previous function.
+#'
 #' @export
 #'
 #' @examples
@@ -148,17 +148,15 @@ return_de_intensity <- function(intensity, sig_ids_list) {
 #' Define a function that takes the intensity values for significant probes and
 #' creates a color-blind friendly heatmap
 #'
-#' @param intensity_vals (matrix): a matrix of the intensity values for the
-#'   significant probes
-#' @param num_cols (int): The number of colors in the selected color palette
-#' @param color_pal (str): A color-blind friendly, RColorBrewer palette
+#' @param de_intensity (matrix): The matrix of intensity values for significant
+#'   differentially expressed probes returned in part 7
 #'
-#' @return A plot consisting of a heatmap of the intensity values for the
-#'   significant probes
+#' @return A heatmap displaying the intensity values for the differentially
+#'   expressed probes
 #' @export
 #'
 #' @examples
-plot_heatmap <- function(scaled) {
+plot_heatmap <- function(de_intensity) {
   col.pal <- RColorBrewer::brewer.pal(11, 'RdBu')
   return(heatmap(de_intensity, col=col.pal))
 }
