@@ -72,7 +72,7 @@ above.__
 
 ```{r code block to transpose, scale data and perform PCA}
 pca_results <- prcomp(scale(t(intensity)), center=FALSE, scale=FALSE)
-head(pca_results)
+summary(pca_results)
 ```
 
 ## 2. Calculating the variance explained by Principal Components
