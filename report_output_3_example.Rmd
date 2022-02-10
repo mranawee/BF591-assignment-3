@@ -208,8 +208,10 @@ head(de_intensity, 2)
 ```
 
 ## 8. Generate a heatmap of normalized intensity values (color-blind friendly)
-__Write a function, `heatmap_plot`, that uses the `de_intensity` results and 
-returns a heatmap *plot*.__
+__Write a function, `heatmap_plot`, that uses the `de_intensity` results and
+returns a heatmap *plot*. Have the function take three arguments: the
+`de_intensity` results, a string specifying the RColorBrewer Palette and an
+integer with the number of colors for that palette.__
 
 *Hint*: Use the base R `heatmap()` function. For this example, we will only be
 passing two arguments: the `matrix` of normalized intensity values from part 7,
