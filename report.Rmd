@@ -173,17 +173,17 @@ selected probes.
 
 __Write a function, `list_significant_probes`, that reads the
 differential_expression_results.csv, filters the data to only contain
-significant probes with a p-value of less than .01, and returns a *list* of the
+significant probes with a 'padj' of less than .01, and returns a *list* of the
 significant probe IDs__. Have your function define two arguments, the path to a
 CSV file (differential_expression_results.csv, in our case) and a user-specified
-value for the p-value threshold.
+value for the 'padj' threshold.
 
 *Hint*: In general, it is a good practice to build functions that are flexible
 and do not contain hard-coded values so that you can reuse your function for
 different applications or analyses with minimal changes. For instance, we have
-you construct this function with a p-value argument so that theoretically, in
-the future, you could easily re-run it with a different value. For our purposes,
-we will manually set this argument as .01.
+you construct this function with a 'padj' value argument so that theoretically,
+in the future, you could easily re-run it with a different value. For our
+purposes, we will manually set this argument as .01.
 
 ```{r code block to filter DE probes, and return matrix of selected normalized intensity values}
 sig_ids <- list_significant_probes('differential_expression_results.csv', .01)

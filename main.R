@@ -109,7 +109,7 @@ make_biplot <- function(metadata, pca_results) {
 #' @param diff_exp_csv (str): The path to the differential expression results
 #'   file we have provided
 #' @param fdr_threshold (float): an appropriate FDR threshold, we will use a
-#'   value of .01
+#'   value of .01. This is the column "padj" in the CSV.
 #'
 #' @return A list with the names of the probeids passing the fdr_threshold
 #' @export
