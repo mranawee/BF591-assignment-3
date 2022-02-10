@@ -39,7 +39,7 @@ test_that("make_variance_tibble", {
   
   function_tib <- make_variance_tibble(test_ve, test_pca_res)
   
-  expect_equal(dim(function_tib), c(length(colnames(test_pca_res$x)), 3))
+  expect_equal(dim(function_tib), c(length(test_ve), 3))
   expect_true(is_tibble(function_tib))
 })
 
@@ -61,7 +61,7 @@ test_that("plot_pca_variance creates a ggplot object with the correct geoms", {
 })
 
 test_that("list_significant_probes returns the probeids with padj < threshold", {
-  #test_de_results.csv has two probes < .01, one == .01, and one > .01
+  #test.csv has two probes < .01, one == .01, and one > .01
   #saved as data file to mimic function args
   
   expect_equal(list_significant_probes('test.csv', .01), c('1_s_at', '2_s_at'))
