@@ -1,0 +1,56 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('testthat')
+```
+
+```{r}
+read_data <- function(intensity_data, delimiter) {
+  data <- read.csv(intensity_data, sep = delimiter)
+  return(data)
+}
+
+calculate_variance_explained <- function(pca_results) {
+  v <- pca_results$sdev^2
+  ve <- v / sum(v)
+  return(ve)
+}
+
+list_significant_probes <- function(diff_exp_csv, fdr_threshold) {
+sig_ids <- read_data(diff_exp_csv, ',') %>% 
+  as_tibble(rownames='probeid') %>% 
+  filter(padj < fdr_threshold) %>% 
+  pull(probeid)
+  return(sig_ids)
+}
+```
+
+
+```{r}
+test_that('function squares each value and returns the proportion based on the vector sum', {
+
+  #Let's use values of 3, 4, 5 and expect our function squares each value in the
+  #vector and returns its proportions
+  
+  test_obj <- list(sdev = c(3, 4, 5))
+  test_results <- c(.18, .32, .50)
+  
+  expect_equal(calculate_variance_explained(test_obj), test_results)
+})
+  
+```
+
+```{r}
+
+test_that('function filters padj col by < .01 and returns probeids', {
+
+  #Test tibble with 2 probes with padj < .01, one equal to .01 and one < .01
+  #actual probeids that pass are s_1_at, and s_2_at
+  
+  expect_equal(list_significant_probes('test_de_results.csv', .01), c('1_s_at', '2_s_at'))
+})
