@@ -2,28 +2,45 @@
 source("main.R")
 library(testthat)
 
-# first argument is just a description, second is a code block inside {}
+#generate consistent sample data for all tests using it
+fx_intensity_df <- data.frame(GSM971958 = runif(1000, 0, 15),
+                              GSM971959 = runif(1000, 0, 15),
+                              GSM971967 = runif(1000, 0, 15),
+                              GSM971968 = runif(1000, 0, 15))
+
+row.names(fx_intensity_df) <- paste0(1:1000, "_s_at")
+fx_intensity_mat <- as.matrix(fx_intensity_df)
+
+
 test_that("read_data loads correctly", {
-  # since we're sourcing main.R, we can just call the function from there as is.
-  # in this case we can use the intensity data, but if this file is changed the 
-  # test may break. Store results into res.
+  #checks dimensions and is.data.frame()
+  
   res <- read_data("example_intensity_data.csv", " ")
-  # first test is checking the dimensions. expect equal passes if the two 
-  # arguments are the same, so we can just make sure it has the right number of 
-  # rows and columns. Also good for students to see what's expected (hopefully).
+  
   expect_equal(dim(res), c(54675, 35))
-  # since you specify a data.frame and not a tibble in the function description, 
-  # we can check the class() to make sure it is a df and not anything else. 
-  expect_equal("data.frame", class(res))
-  # this is probably enough tests for a simple data loading function like this
+  expect_true(is.data.frame(res))
+  
 })
 
-test_that("calculate_variance", {
-  skip(message = "Implement later.")
+test_that("calculate_variance squares each element in a vector and divides by sum", {
+  #mimic the object by using a named list so input arg is the same
+  
+  test_obj <- list(sdev = c(sort(runif(20, min=0, max=100), decreasing=TRUE)))
+  test_res <- test_obj$sdev^2 / sum(test_obj$sdev^2)
+  
+  expect_true(all(dplyr::near(calculate_variance_explained(test_obj), test_res, tol=.1)))
 })
 
 test_that("make_variance_tibble", {
-  skip(message = "Implement later.")
+  #just checks if length of tibble is the same as number of PCs, and is_tibble()
+  
+  test_pca_res <- prcomp(scale(t(fx_intensity_mat)), scale=FALSE, center=FALSE)
+  test_ve <- test_pca_res$sdev^2 / sum(test_pca_res$sdev^2)
+  
+  function_tib <- make_variance_tibble(test_ve, test_pca_res)
+  
+  expect_equal(dim(function_tib), c(length(colnames(test_pca_res$x)), 3))
+  expect_true(is_tibble(function_tib))
 })
 
 test_that("plot_pca_variance creates a ggplot object with the correct geoms", {
@@ -43,31 +60,32 @@ test_that("plot_pca_variance creates a ggplot object with the correct geoms", {
   expect_true("GeomPoint" %in% geoms)
 })
 
-test_that("make_biplot", {
-  skip(message = "Implement later.")
+test_that("list_significant_probes returns the probeids with padj < threshold", {
+  #test_de_results.csv has two probes < .01, one == .01, and one > .01
+  #saved as data file to mimic function args
+  
+  expect_equal(list_significant_probes('test.csv', .01), c('1_s_at', '2_s_at'))
 })
 
-test_that("list_significant_probes", {
-  skip(message = "Implement later.")
-})
-
-test_that("return_de_intensity", {
-  skip(message = "Implement later.")
+test_that("return_de_intensity returns a matrix and the selected probes", {
+  #tests is.matrix() and since function subsets the matrix should be identical
+  #no need to worry about rounding, dimensions, etc. ?
+  
+  test_mat <- fx_intensity_mat[c('1_s_at', '2_s_at'),]
+  function_mat <- return_de_intensity(fx_intensity_df, c('1_s_at', '2_s_at'))
+  
+  expect_true(is.matrix(function_mat))
+  expect_true(identical(function_mat, test_mat))
 })
 
 test_that("plot_heatmap has correct rows and cols", {
-  # this one is an interesting case, since its object (what the function returns)
-  # doesn't have as many descriptive elements as ggplot's. We can at least 
-  # confirm that their function creates a heatmap and that it has a predictable 
-  # number of rows/columns. Since we don't know if their earlier functions will 
-  # work, we will create a fake de_intensity matrix to test with.
-  fx_intensity <- data.frame(GSM1 = runif(1000, 0, 15),
-                             GSM2 = runif(1000, 0, 15),
-                             GSM3 = runif(1000, 0, 15),
-                             GSM4 = runif(1000, 0, 15))
-  row.names(fx_intensity) <- paste0(1:1000, "_at")
-  fx_intensity <- as.matrix(fx_intensity)
-  heatmap <- plot_heatmap(fx_intensity)
+  #this one is an interesting case, since its object (what the function returns)
+  #doesn't have as many descriptive elements as ggplot's. We can at least 
+  #confirm that their function creates a heatmap and that it has a predictable 
+  #number of rows/columns. Since we don't know if their earlier functions will 
+  #work, we will create a fake de_intensity matrix to test with.
+  
+  heatmap <- plot_heatmap(fx_intensity_mat, 11, 'RdBu')
   expect_equal(length(heatmap$colInd), 4)
   expect_equal(length(heatmap$rowInd), 1000)
   expect_equal(class(heatmap), "list")
