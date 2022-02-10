@@ -119,9 +119,8 @@ list_significant_probes <- function(diff_exp_csv, fdr_threshold) {
 sig_ids <- read_data(diff_exp_csv, ',') %>% 
   as_tibble(rownames='probeid') %>% 
   filter(padj < fdr_threshold) %>% 
-  select(probeid) %>% 
-  as.list()
-  return(sig_ids$probeid)
+  pull(probeid)
+  return(sig_ids)
 }
 
 #' Define a function that uses the list of significant probeids to return a
