@@ -13,8 +13,7 @@ library('RColorBrewer')
 #'
 #' @examples
 read_data <- function(intensity_data, delimiter) {
-  data <- read.csv(intensity_data, sep = delimiter)
-  return(data)
+  return(NULL)
 }
 
 #' Define a function to calculate the proportion of variance explained by each PC
@@ -26,9 +25,7 @@ read_data <- function(intensity_data, delimiter) {
 #'
 #' @examples
 calculate_variance_explained <- function(pca_results) {
-  v <- pca_results$sdev^2
-  ve <- v / sum(v)
-  return(ve)
+  return()
 }
 
 #' Define a function that takes in the variance values and the PCA results to
@@ -44,9 +41,7 @@ calculate_variance_explained <- function(pca_results) {
 #'
 #' @examples 
 make_variance_tibble <- function(pca_ve, pca_results) {
-  var_tib <- tibble(variance_explained = pca_ve) %>% 
-  mutate(principal_components = factor(colnames(pca_results$x), levels=colnames(pca_results$x)), cumulative = cumsum(variance_explained))
-  return(var_tib)
+  return()
 }
 
 #' Define a function that creates a bar plot of the variance explained by each
@@ -63,18 +58,7 @@ make_variance_tibble <- function(pca_ve, pca_results) {
 #'
 #' @examples
 plot_pca_variance <- function(variance_tibble) {
-  ls_cols <- c('Cumulative'='black')
-  bar_cols <-c('Variance Explained'='light blue')
-  variance_tibble %>%
-    ggplot() + 
-    geom_bar(aes(x=principal_components, y=variance_explained, fill='Variance Explained'), stat='identity', color='black') + 
-    geom_line(aes(x=principal_components, y=cumulative, group=1, color='Cumulative')) +
-    geom_point(aes(x=principal_components, y=cumulative, group=1, color='Cumulative')) +
-    scale_colour_manual(name="Cumulative",values=ls_cols) +
-    scale_fill_manual(name="Variance Explained",values=bar_cols) +
-    labs(x='PC', y='% variance') +
-    theme_classic(base_size=8) + 
-    theme(axis.text.x=element_text(angle=90,hjust=1))
+   return()
 }
 
 #' Define a function to create a biplot of PC1 vs. PC2 labeled by
@@ -89,20 +73,8 @@ plot_pca_variance <- function(variance_tibble) {
 #'
 #' @examples
 make_biplot <- function(metadata, pca_results) {
-  meta <- readr::read_csv(metadata) %>% 
-    select(geo_accession, SixSubtypesClassification)
-
-  labeled <- pca_results$x %>% 
-    as_tibble(rownames='geo_accession') %>% 
-    left_join(meta, by='geo_accession')
-  
-  biplot <- labeled %>% 
-    ggplot() + 
-    geom_point(aes(x=PC1, y=PC2, color=SixSubtypesClassification)) +
-    theme_classic()
-  return(biplot)
+  return()
 }
-
 
 #' Define a function to return a list of probeids filtered by signifiance
 #'
@@ -116,11 +88,7 @@ make_biplot <- function(metadata, pca_results) {
 #'
 #' @examples
 list_significant_probes <- function(diff_exp_csv, fdr_threshold) {
-sig_ids <- read_data(diff_exp_csv, ',') %>% 
-  as_tibble(rownames='probeid') %>% 
-  filter(padj < fdr_threshold) %>% 
-  pull(probeid)
-  return(sig_ids)
+  return()
 }
 
 #' Define a function that uses the list of significant probeids to return a
@@ -137,12 +105,7 @@ sig_ids <- read_data(diff_exp_csv, ',') %>%
 #'
 #' @examples
 return_de_intensity <- function(intensity, sig_ids_list) {
-  de_intensity <- intensity %>% 
-    as_tibble(rownames='probeid') %>% 
-    filter(probeid %in% sig_ids_list) %>% 
-    column_to_rownames(var='probeid') %>% 
-    as.matrix()
-  return(de_intensity)
+  return()
 }
 
 #' Define a function that takes the intensity values for significant probes and
@@ -160,6 +123,5 @@ return_de_intensity <- function(intensity, sig_ids_list) {
 #'
 #' @examples
 plot_heatmap <- function(de_intensity, num_colors, palette) {
-  col.pal <- RColorBrewer::brewer.pal(num_colors, palette)
-  return(heatmap(de_intensity, col=col.pal))
+  return()
 }
