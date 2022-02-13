@@ -188,6 +188,7 @@ purposes, we will manually set this argument as .01.
 ```{r code block to filter DE probes, and return matrix of selected normalized intensity values}
 sig_ids <- list_significant_probes('differential_expression_results.csv', .01)
 head(sig_ids)
+length(sig_ids)
 ```
 
 ## 7. Extract out the normalized intensity values for the significant probes 
